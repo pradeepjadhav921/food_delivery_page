@@ -16,8 +16,10 @@ import {
 } from '@mui/material';
 import QRCode from 'react-qr-code';
 import { CheckCircle } from '@mui/icons-material';
+import Modal from '@mui/material/Modal';
+import { send_order_to_hotel } from '../utils/websocket';
 
-const OrderConfirmation = ({ cartItems,setCart, open, onClose, upiId, totalAmount }) => {
+const OrderConfirmation = ({ restaurant,cartItems,setCart, open, onClose, upiId, totalAmount,tableNo,section,setshowconfirmorder }) => {
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
@@ -27,15 +29,48 @@ const OrderConfirmation = ({ cartItems,setCart, open, onClose, upiId, totalAmoun
     address: ''
   });
   const qrContainerRef = useRef(null);
+  const [open1, setOpen1] = useState(false);
+  const [shownotift, setshownotift]= useState(false);
 
-  // Check for saved user details on component mount
   useEffect(() => {
     const savedDetails = localStorage.getItem('userDetails');
+    // if (tableNo !==0){
+    //   setOpen1(true)
+    // }
     if (savedDetails) {
       setUserDetails(JSON.parse(savedDetails));
       setActiveStep(1); // Skip to QR page if details exist
     }
   }, []);
+
+useEffect(() => {
+  const placeOrder = async () => {
+    console.log("get data from cashier",tableNo !== 0 && open);
+    const hotelname = restaurant.login_user
+    if (tableNo !== 0 && open) {
+      const orderResult = await send_order_to_hotel(
+        hotelname,
+        section,
+        tableNo,
+        "order by QR scan",
+        cartItems,
+        isProcessing,
+        setIsProcessing,
+        "captain"
+      );
+
+      console.log("section",(orderResult || section !== 'online_order') )
+      if (orderResult || section !== 'online_order') {
+        console.log("get data from cashier",orderResult);
+        onClose();
+        setshownotift(true);
+        setshowconfirmorder(orderResult.action)
+      }
+    }
+  };
+
+  placeOrder();
+}, [open]);
 
   const handlePayment = () => {
     setIsProcessing(true);
@@ -115,6 +150,50 @@ const OrderConfirmation = ({ cartItems,setCart, open, onClose, upiId, totalAmoun
 
   const steps = ['Enter Details', 'Make Payment'];
 
+  if (tableNo !== 0){
+    return(
+      <DialogContent>
+        <Modal
+          open={open}
+          onClose={() => {}}
+          aria-labelledby="order-success-modal"
+          disableEscapeKeyDown // Prevents closing with ESC key
+          disableBackdropClick // Prevents closing when clicking outside
+        >
+          <Box sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 400,
+            bgcolor: 'background.paper',
+            boxShadow: 24,
+            p: 4,
+            textAlign: 'center',
+            borderRadius: 2
+          }}>
+            <Typography variant="h6" component="h2" gutterBottom>
+              Processing Your Order
+            </Typography>
+            
+            <Box sx={{ 
+              display: 'flex',
+              justifyContent: 'center',
+              my: 3
+            }}>
+              <CircularProgress color="success" />
+            </Box>
+            
+            <Typography sx={{ mt: 2 }}>
+              Please wait while we process your request...
+            </Typography>
+            
+          </Box>
+        </Modal>
+      </DialogContent>
+    )
+  }
+
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogContent>
@@ -173,6 +252,8 @@ const OrderConfirmation = ({ cartItems,setCart, open, onClose, upiId, totalAmoun
           </Box>
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            
+            {/* fill name etc customer details */}
             {paymentStatus === 'success' ? (
               <>
                 <CheckCircle sx={{ fontSize: 80, color: 'green', mb: 2 }} />
@@ -230,13 +311,16 @@ const OrderConfirmation = ({ cartItems,setCart, open, onClose, upiId, totalAmoun
           </Box>
         )}
       </DialogContent>
+
+      {/* buttons */}
       <DialogActions sx={{ justifyContent: 'space-between', pb: 3, px: 3 }}>
+
+        {/* submit button customer data */}
         {activeStep === 1 && paymentStatus !== 'success' && (
           <Button onClick={handleBack} sx={{ mr: 1 }}>
             Back to Details
           </Button>
         )}
-        
         {activeStep === 1 && paymentStatus !== 'success' && (
           <Button 
             variant="contained" 

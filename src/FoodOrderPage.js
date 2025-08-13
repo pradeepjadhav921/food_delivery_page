@@ -1,7 +1,6 @@
-// src/FoodOrderPage.js
-import React, { useState,useEffect, use } from 'react';
-import { Box, Container, useMediaQuery, useTheme, Fade, Slide, Typography } from '@mui/material';
-// import { restaurant, menuItems } from './data';
+import React, { useState, useEffect } from 'react';
+import { Box, Container, useMediaQuery, useTheme, Dialog, DialogContent, Typography, Slide } from '@mui/material';
+import { CheckCircle, Warning, Info } from '@mui/icons-material';
 import MobileHeader from './components/MobileHeader';
 import SearchFilter from './components/SearchFilter';
 import MobileDishCard from './components/MobileDishCard';
@@ -10,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Confetti from 'react-confetti';
 import { playWelcomeChime } from './components/sounds'; // Import the sound utility
 
-function FoodOrderPage({ restaurant, onBack, hotel_in_url }) {
+function FoodOrderPage({ restaurant, onBack, hotel_in_url, tableNo,section }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [cart, setCart] = useState([]);
@@ -28,14 +27,32 @@ function FoodOrderPage({ restaurant, onBack, hotel_in_url }) {
   const totalItems = cart.length;
   const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const totalOriginalPrice = cart.reduce((sum, item) => sum + (item.originalPrice * item.quantity), 0);
-
+  const [showconfirmorder, setshowconfirmorder] = useState('')
 
   useEffect(() => {
     console.log("Restaurant Name:", restaurantName,restaurantUPI,restaurantAddress,restaurantName,restaurantExpectedDeliveryTime);
-    console.log("Hotel Name from URL:", restaurant);
+    console.log("Hotel data from URL:", restaurant);
     // Check if user details are saved in localStorage
       fetchTableAndMenuData();
   }, []);
+
+  // Effect for welcome animation
+  useEffect(() => {
+    if (showWelcome) {
+      const timer = setTimeout(() => {
+        setShowWelcome(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [showWelcome]);
+
+  // Effect for order confirmation animation
+  useEffect(() => {
+      const timer = setTimeout(() => {
+        setshowconfirmorder("");
+      }, 5000);
+      return () => clearTimeout(timer);
+  }, [showconfirmorder]);
 
 
   // useEffect(() => {
@@ -163,9 +180,52 @@ function FoodOrderPage({ restaurant, onBack, hotel_in_url }) {
       position: 'relative',
       overflow: 'hidden'
     }}>
-      {/* Welcome Back Animation */}
+
+      {/* Welcome Animation */}
       <AnimatePresence>
         {showWelcome && (
+          <Box
+            component={motion.div}
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            transition={{ type: 'spring', damping: 10 }}
+            sx={{
+              position: 'fixed',
+              top: '20%',
+              left: 0,
+              right: 0,
+              zIndex: 9999,
+              textAlign: 'center',
+              pointerEvents: 'none'
+            }}
+          >
+            <Slide direction="down" in={showWelcome} mountOnEnter unmountOnExit>
+              <Box sx={{
+                backgroundColor: 'rgba(255,255,255,0.9)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: 4,
+                p: 3,
+                mx: 'auto',
+                maxWidth: '80%',
+                boxShadow: 24,
+                border: '1px solid rgba(255,255,255,0.3)'
+              }}>
+                <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 1 }}>
+                  Welcome back, {userDetails?.name.split(' ')[0]}! 👋
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  We're happy to see you again
+                </Typography>
+              </Box>
+            </Slide>
+          </Box>
+        )}
+      </AnimatePresence>
+
+      {/* Order Status Confetti */}
+      <AnimatePresence>
+        {showconfirmorder === "Accepted" && (
           <>
             <Confetti
               width={window.innerWidth}
@@ -190,24 +250,22 @@ function FoodOrderPage({ restaurant, onBack, hotel_in_url }) {
                 pointerEvents: 'none'
               }}
             >
-              <Slide direction="down" in={showWelcome} mountOnEnter unmountOnExit>
-                <Box
-                  sx={{
-                    backgroundColor: 'rgba(255,255,255,0.9)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: 4,
-                    p: 3,
-                    mx: 'auto',
-                    maxWidth: '80%',
-                    boxShadow: 24,
-                    border: '1px solid rgba(255,255,255,0.3)'
-                  }}
-                >
+              <Slide direction="down" in={showconfirmorder} mountOnEnter unmountOnExit>
+                <Box sx={{
+                  backgroundColor: 'rgba(255,255,255,0.9)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: 4,
+                  p: 3,
+                  mx: 'auto',
+                  maxWidth: '80%',
+                  boxShadow: 24,
+                  border: '1px solid rgba(255,255,255,0.3)'
+                }}>
                   <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 1 }}>
-                    Welcome back, {userDetails?.name.split(' ')[0]}! 👋
+                    Order Accepted! 🎉
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    We're happy to see you again
+                    Your order is being prepared
                   </Typography>
                 </Box>
               </Slide>
@@ -216,11 +274,38 @@ function FoodOrderPage({ restaurant, onBack, hotel_in_url }) {
         )}
       </AnimatePresence>
 
+      {/* Order Confirmation Dialog */}
+      <Dialog open={showconfirmorder.includes('rejected')} fullWidth maxWidth="sm">
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            { showconfirmorder === "Accepted" ? (
+              <>
+                <CheckCircle sx={{ fontSize: 80, color: 'green', mb: 2 }} />
+                <Typography variant="h5" gutterBottom>Order Placed Successfully!</Typography>
+                <Typography>Your order has been confirmed.</Typography>
+              </>
+            ) : (
+              <>
+                <CheckCircle sx={{ fontSize: 80, color: 'green', mb: 2 }} />
+                <Typography variant="h5" gutterBottom>Order {showconfirmorder}!</Typography>
+                <Typography>
+                  {showconfirmorder === 'Accepted' 
+                    ? 'The restaurant has accepted your order.' 
+                    : 'There was an issue with your order.'}
+                </Typography>
+              </>
+            )}
+          </Box>
+        </DialogContent>
+      </Dialog>
+
       <MobileHeader 
         name={restaurant.name} 
         address={restaurant.address || ''} 
         onBack={onBack}
         hotel_in_url={hotel_in_url}
+        tableNo={tableNo} // Pass the table number to MobileHeader
+        section={section}
       />
 
       <Container maxWidth="sm" sx={{ px: isMobile ? 2 : 3 }}>
@@ -239,6 +324,9 @@ function FoodOrderPage({ restaurant, onBack, hotel_in_url }) {
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {filteredItems.map(item => (
             <MobileDishCard 
+              section={section}
+              tableNo={tableNo}
+              restaurant={restaurant}
               key={item.id}
               item={item}
               pricetype={pricetype}
@@ -249,12 +337,16 @@ function FoodOrderPage({ restaurant, onBack, hotel_in_url }) {
               isMobile={isMobile}
               cart={cart} // Pass cart state
               updateCartItemQuantity={updateCartItemQuantity} // Pass update function
+              setshowconfirmorder={setshowconfirmorder}
             />
           ))}
           </Box>
         </Container>
         
         <MobileCart 
+            section={section}
+            tableNo={tableNo}
+            restaurant={restaurant}
             totalItems={totalItems} 
             totalPrice={totalPrice} 
             cartItems={cart}
@@ -265,6 +357,7 @@ function FoodOrderPage({ restaurant, onBack, hotel_in_url }) {
             isMobile={isMobile}
             restaurantUPI={restaurantUPI}
             expectedDeliveryTime={restaurantExpectedDeliveryTime} // Pass expected delivery time
+            setshowconfirmorder={setshowconfirmorder}
         />
     </Box>
   );

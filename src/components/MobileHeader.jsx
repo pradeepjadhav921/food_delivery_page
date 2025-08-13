@@ -16,7 +16,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
-const MobileHeader = ({ name, address, onBack, hotel_in_url }) => {
+const MobileHeader = ({ name, address, onBack, hotel_in_url, tableNo,section }) => {
   const [openHistory, setOpenHistory] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
 

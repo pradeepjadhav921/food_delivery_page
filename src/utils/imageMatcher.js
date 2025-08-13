@@ -7,7 +7,7 @@
  * @returns {string} Best matched image filename or "default.jpg" if no match found
  */
 export const findBestImageMatch = (submenu, imageList) => {
-    console.log("Finding best image match for submenu:", submenu, imageList);
+    // console.log("Finding best image match for submenu:", submenu, imageList);
     if (!imageList || imageList.length === 0) return "default.jpg";
 
     // Normalize the submenu name (lowercase, no spaces, no special chars)
@@ -22,8 +22,8 @@ export const findBestImageMatch = (submenu, imageList) => {
         img.replace('.jpg', '').replace(/\s+/g, '_')
     );
 
-    console.log("Cleaned submenu:", cleanSubmenu);
-    console.log("Normalized images:", normalizedImages);
+    // console.log("Cleaned submenu:", cleanSubmenu);
+    // console.log("Normalized images:", normalizedImages);
 
     // 1. Exact match (biryani => biryani.jpg)
     const exactMatchIndex = normalizedImages.findIndex(img => img === cleanSubmenu);

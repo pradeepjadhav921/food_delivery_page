@@ -15,18 +15,21 @@ import {
   Table,
   TableBody,
   TableRow,
-  TableCell
+  TableCell,
+  TextField,
 } from '@mui/material';
-import { ShoppingCart as CartIcon, Close as CloseIcon, Add as AddIcon,Remove as RemoveIcon,RemoveShoppingCartTwoTone } from '@mui/icons-material';
+import { CheckCircle } from '@mui/icons-material';
+import { ShoppingCart as CartIcon, Close as CloseIcon, Add as AddIcon,Remove as RemoveIcon,RemoveShoppingCartTwoTone,SpeakerNotes } from '@mui/icons-material';
 import { FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import { faPercent, faGreaterThan,faTicket  } from '@fortawesome/free-solid-svg-icons';
 import OrderConfirmation from './OrderConfirmation.jsx';
 
 
-const MobileCart = ({ totalItems, totalPrice, cartItems,setCart, totalOriginalPrice, removeFromCart, updateCartItemQuantity, isMobile, restaurantUPI, expectedDeliveryTime }) => {
+const MobileCart = ({ section, tableNo, restaurant, totalItems, totalPrice, cartItems,setCart, totalOriginalPrice, removeFromCart, updateCartItemQuantity, isMobile, restaurantUPI, expectedDeliveryTime,setshowconfirmorder }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [orderOpen, setOrderOpen] = useState(false);
   console.log("selected items",totalItems,cartItems,totalPrice,totalOriginalPrice);
+  console.log("selected tableNo", tableNo);
 
   const toggleDrawer = (open) => (event) => {
     if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
@@ -42,6 +45,16 @@ const MobileCart = ({ totalItems, totalPrice, cartItems,setCart, totalOriginalPr
   const convenienceFee = 2;
   const taxes = 0;
   const grandTotal = itemTotal + deliveryCharges + convenienceFee + taxes;
+  const [notePopupOpen, setNotePopupOpen] = useState(false);
+  const [currentItem, setCurrentItem] = useState(null);
+
+  const [orderPlaced, setOrderPlaced] = useState(false);
+  // const [orderOpen, setOrderOpen] = useState(false);
+
+  const handleOrderSuccess = () => {
+    setOrderOpen(false);
+    setOrderPlaced(true);
+  };
 
   const clear_cart = () => {
     setOrderOpen(false);
@@ -49,6 +62,81 @@ const MobileCart = ({ totalItems, totalPrice, cartItems,setCart, totalOriginalPr
     // Clear the cart state
     setCart([]);
   };
+
+  // Add Note Popup Component
+  const AddNotePopup = ({ open, onClose, item, onSaveNote }) => {
+    const [note, setNote] = useState(item.note || '');
+
+    const handleSave = () => {
+      onSaveNote(item.id, note);
+      onClose();
+    };
+
+    return (
+      <Drawer
+        anchor="bottom"
+        open={open}
+        onClose={onClose}
+        PaperProps={{
+          sx: {
+            height: '40vh',
+            borderTopLeftRadius: 16,
+            borderTopRightRadius: 16,
+            padding: 2,
+          }
+        }}
+      >
+        <Box sx={{ p: 2 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            mb: 2
+          }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+              Add Note for {item.name}
+            </Typography>
+            <IconButton onClick={onClose}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+
+          <TextField
+            fullWidth
+            multiline
+            rows={6}
+            variant="outlined"
+            placeholder="E.g. Less spicy, no onion, extra sauce, etc."
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+
+          <Button 
+            fullWidth
+            variant="contained"
+            onClick={handleSave}
+            sx={{
+              py: 1.5,
+              borderRadius: 1,
+              fontWeight: 'bold',
+              backgroundColor: '#00acee'
+            }}
+          >
+            Save Note
+          </Button>
+        </Box>
+      </Drawer>
+    );
+  };
+
+  const handleSaveNote = (itemId, note) => {
+    setCart(cartItems.map(item => 
+      item.id === itemId ? { ...item, note } : item
+    ));
+  };
+
+  
 
   return (
     <>
@@ -193,6 +281,23 @@ const MobileCart = ({ totalItems, totalPrice, cartItems,setCart, totalOriginalPr
                       <ListItemText
                         primary={
                           <Box sx={{ display: 'flex', alignItems: 'center',padding: '0px',gap: 0 }}>
+                            {/* ADD NOTE TO ITEM */}
+                            <Box sx={{ flex: 1, minWidth: 0 ,padding: '0px',maxWidth: '30px'}}>
+                              <IconButton 
+                                size="small" 
+                                onClick={() => {
+                                  setCurrentItem(item);
+                                  setNotePopupOpen(true);
+                                }}
+                                sx={{ 
+                                  p: 0.5,
+                                  color: item.note ? 'primary.main' : 'text.secondary'
+                                }}
+                              >
+                                <SpeakerNotes fontSize="small" />
+                              </IconButton>
+                            </Box>
+                            
                             {/* Item name and submenu */}
                             <Box sx={{ flex: 1, minWidth: 0 ,padding: '0px',}}>
                               <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
@@ -211,6 +316,19 @@ const MobileCart = ({ totalItems, totalPrice, cartItems,setCart, totalOriginalPr
                                 }}
                               >
                                 {item.submenu}
+                                {item.note && (
+                                  <Typography 
+                                    variant="caption" 
+                                    color="primary"
+                                    sx={{
+                                      display: 'block',
+                                      fontStyle: 'italic',
+                                      mt: 0.5
+                                    }}
+                                  >
+                                    Note: {item.note}
+                                  </Typography>
+                                )}
                               </Typography>
                             </Box>
 
@@ -421,30 +539,46 @@ const MobileCart = ({ totalItems, totalPrice, cartItems,setCart, totalOriginalPr
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                 At Nextorbitals.in, your trust is foremost. Your money is yours until you get what you paid for.
               </Typography>
-
-              <Button 
-                fullWidth
-                variant="contained"
-                size="large"
-                onClick={() => setOrderOpen(true)}
-                sx={{
-                  mt: 2,
-                  py: 1.5,
-                  borderRadius: 1,
-                  fontWeight: 'bold',
-                  backgroundColor: '#00acee'
-                }}
-              >
-                Place Your Order ₹{grandTotal.toLocaleString('en-IN')}
-              </Button>
-              <OrderConfirmation 
-                cartItems={cartItems}
-                setCart={setCart}
-                open={orderOpen}
-                onClose={() => { clear_cart(); }}
-                upiId={restaurantUPI}
-                totalAmount={totalPrice}
-              />
+                <>
+                  <Button 
+                    fullWidth
+                    variant="contained"
+                    size="large"
+                    onClick={() => setOrderOpen(true)}
+                    sx={{
+                      mt: 2,
+                      py: 1.5,
+                      borderRadius: 1,
+                      fontWeight: 'bold',
+                      backgroundColor: '#00acee'
+                    }}
+                  >
+                    Place Your Order ₹{grandTotal.toLocaleString('en-IN')}
+                  </Button>
+                  <OrderConfirmation 
+                    restaurant={restaurant}
+                    cartItems={cartItems}
+                    setCart={setCart}
+                    open={orderOpen}
+                    onClose={() => { 
+                      setOrderOpen(false);
+                      clear_cart(); 
+                    }}
+                    upiId={restaurantUPI}
+                    totalAmount={totalPrice}
+                    tableNo={tableNo}
+                    section={section}
+                    setshowconfirmorder={setshowconfirmorder}
+                  />
+                </>
+                {currentItem && (
+                  <AddNotePopup
+                    open={notePopupOpen}
+                    onClose={() => setNotePopupOpen(false)}
+                    item={currentItem}
+                    onSaveNote={handleSaveNote}
+                  />
+                )}
             </>
           )}
         </Box>

@@ -25,9 +25,11 @@ const RestaurantListWithAPI = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
   const [hotel_in_url, sethotel_in_url] = useState(null);
+  const [tableNo, setTableNo] = useState(0);
+  const [section, setSection] = useState('');
 
   // Extract hotel_name from URL
-  // Fetch restaurants data
+  // Fetch restaurants images
   useEffect(() => {
     const fetchRestaurants = async () => {
       try {
@@ -38,7 +40,7 @@ const RestaurantListWithAPI = () => {
           sethotel_in_url(nameFromUrl);
         }
         let url = 'https://nextorbitals.in/images/get_image_list.php';
-        console.log(`Fetching restaurants from: ${url}`);
+        // console.log(`Fetching restaurants from: ${url}`);
 
         const response = await fetch(url);
         if (!response.ok) throw new Error(`Failed to fetch: ${response.status}`);
@@ -48,7 +50,7 @@ const RestaurantListWithAPI = () => {
         // Ensure we always work with an array
         let restaurantsData = Array.isArray(data) ? data : [data];
         // Handle case where response might be an object with nested array
-        console.log("Fetched Restaurants Data:", restaurantsData);
+        // console.log("Fetched Restaurants Data:", restaurantsData);
         localStorage.setItem('server_images', JSON.stringify(restaurantsData));
 
       } catch (err) {
@@ -61,25 +63,25 @@ const RestaurantListWithAPI = () => {
     fetchRestaurants();
   }, []);
 
-
-
-
-
-  // Fetch restaurants data
+  // Fetch restaurants hoteldata
   useEffect(() => {
     const fetchRestaurants = async () => {
       try {
         const params = new URLSearchParams(location.search);
         const nameFromUrl = params.get('hotel_name');
+        const sectionFromUrl = params.get('section');
+        const tableNoFromUrl = params.get('table_no');
         if (nameFromUrl) {
           console.log(`Hotel name from URL: ${nameFromUrl}`);
           sethotel_in_url(nameFromUrl);
+          setSection(sectionFromUrl)
+          setTableNo(tableNoFromUrl); // Set default table number to 1 if hotel_name is present
         }
         let url = 'https://api2.nextorbitals.in/api/save_hotel_details.php';
         try {
           if (nameFromUrl) {
             url += `?hotel_name=${nameFromUrl}`;
-            console.log(`Constructed URL: ${url} with hotel_name: ${nameFromUrl}`);
+            console.log(`Constructed URL: ${url} with hotel_name:${nameFromUrl}and section:${sectionFromUrl} table no:${tableNoFromUrl}`);
           }
         } catch (error) {
           console.error("Error constructing URL:", error);
@@ -137,7 +139,7 @@ const RestaurantListWithAPI = () => {
         setRestaurants(transformedRestaurants);
         
         if (nameFromUrl && transformedRestaurants.length > 0) {
-          console.log(`Setting selected restaurant to navigate: ${transformedRestaurants[0].name}`);
+          console.log(`Setting selected restaurant to navigate: ${transformedRestaurants[0]}`);
           setSelectedRestaurant(transformedRestaurants[0]);
         }
         
@@ -190,12 +192,14 @@ const RestaurantListWithAPI = () => {
   }
 
   if (selectedRestaurant) {
-    // console.log(`Hotel name from URL selectedRestaurant:${hotel_in_url}`);
+    console.log(`Hotel name from URL selectedRestaurant:${hotel_in_url}`);
     return (
       <FoodOrderPage 
         restaurant={selectedRestaurant} 
         onBack={handleBackToList}
         hotel_in_url={hotel_in_url}
+        tableNo={tableNo} // Pass the table number to FoodOrderPage
+        section={section}
       />
     );
   }

@@ -15,7 +15,7 @@ import { Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
 import { findBestImageMatch } from '../utils/imageMatcher';
 
 
-const MobileDishCard = ({ item, addToCart, pricetype, isInCart, removeFromCart, discountPercent, isMobile,  cart, updateCartItemQuantity }) => {
+const MobileDishCard = ({section, tableNo, restaurant, item, addToCart, pricetype, isInCart, removeFromCart, discountPercent, isMobile,  cart, updateCartItemQuantity, setshowconfirmorder }) => {
   // Calculate discounted price (original price + 20)
   const currentPrice = Number(item[pricetype]);
   const originalPrice = (currentPrice / (1 - discountPercent));
@@ -26,7 +26,7 @@ const MobileDishCard = ({ item, addToCart, pricetype, isInCart, removeFromCart, 
   // console.log("Image name found:", item.submenu,item);
   const imageName = findBestImageMatch(item.submenu, storedImages);
   const imageUrl = `https://nextorbitals.in/images/${imageName}`;
-  console.log("Image name found:", imageUrl);
+  // console.log("Image name found:", imageUrl);
 
   if (item.available === 0) {
     return null;
