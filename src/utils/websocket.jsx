@@ -74,20 +74,14 @@ export const send_order_to_hotel = (
 
         console.log('Order placed successfully!');
         
-        if (section === 'online_order') {
-          console.log('Waiting for settlement update...');
-          try {
-            const settlementUpdate = await waitForSettlementUpdate(hotel_name, role);
-            cleanup();
-            resolve(settlementUpdate);
-          } catch (e) {
-            cleanup();
-            reject(e);
-          }
-        } else {
-          console.log('Skipping settlement update for non-online order');
+        console.log('Waiting for settlement update...');
+        try {
+          const settlementUpdate = await waitForSettlementUpdate(hotel_name, role);
           cleanup();
-          resolve({action: "Accepted",hotel_name: hotel_name,id: 1,message: "Settle the table",section: section,tableNumber:table_no ,timestamp: 1755102744184});
+          resolve(settlementUpdate);
+        } catch (e) {
+          cleanup();
+          reject(e);
         }
       } catch (error) {
         console.error('Order processing error:', error);
