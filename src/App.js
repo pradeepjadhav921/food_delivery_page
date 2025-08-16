@@ -28,6 +28,7 @@ const RestaurantListWithAPI = () => {
   const [tableNo, setTableNo] = useState(0);
   const [section, setSection] = useState('');
 
+
   // Extract hotel_name from URL
   // Fetch restaurants images
   useEffect(() => {
@@ -112,13 +113,13 @@ const RestaurantListWithAPI = () => {
           return { // Contains all original data
             id: index + 1,
             name: hotel.hotelName || `Hotel ${index + 1}`,
-            cuisine: "Various cuisines",
+            cuisine: hotel.address|| "address not available",
             rating: parseFloat((4.0 + (Math.random() * 0.5)).toFixed(1)),
             deliveryTime: `${30 + (index * 5)}-${40 + (index * 5)} Mins`,
             distance: `${(0.0).toFixed(1)} km`,
             discount: `Upto ${hotel.online_order_discounts}% off`,
             online_order_discounts: hotel.online_order_discounts,
-            image: hotel.logo || "https://via.placeholder.com/100?text=Hotel",
+            image: hotel.logo,
             address: hotel.address || "Address not available",
             expectedDeliveryTime: `${hotel.minimum_preparation_time} minutes`,
             UPI_ID: hotel.UPI_ID || "default@upi",
@@ -135,7 +136,7 @@ const RestaurantListWithAPI = () => {
             Price_online_order: hotel.Price_online_order || 0,
           };
         });
-
+        // console.log("restaurant",transformedRestaurants)
         setRestaurants(transformedRestaurants);
         
         if (nameFromUrl && transformedRestaurants.length > 0) {
@@ -212,7 +213,7 @@ const RestaurantListWithAPI = () => {
         color: theme.palette.primary.main,
         fontSize: '1.5rem'
       }}>
-        Start Ordering from ONDC
+        Start Ordering from GETYOURFOOD
       </Typography>
       
       <Box sx={{ 
@@ -223,7 +224,7 @@ const RestaurantListWithAPI = () => {
       }}>
         <input
           type="text"
-          placeholder="Search Restaurant, dish, cuisine"
+          placeholder="Search Restaurant Name, Address, dish"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           style={{
@@ -292,7 +293,8 @@ const RestaurantListWithAPI = () => {
             <Box sx={{ display: 'flex' }}>
               <Box sx={{ width: 100, height: 100, minWidth: 100 }}>
                 <img
-                  src={restaurant.image}
+                  loading="lazy"
+                  src={restaurant.image ? restaurant.image : "./hotel_bulding.jpg"}
                   alt={restaurant.name}
                   style={{
                     width: '100%',

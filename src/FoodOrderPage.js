@@ -322,24 +322,24 @@ function FoodOrderPage({ restaurant, onBack, hotel_in_url, tableNo,section }) {
           </Box>
           
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {filteredItems.map(item => (
-            <MobileDishCard 
-              section={section}
-              tableNo={tableNo}
-              restaurant={restaurant}
-              key={item.id}
-              item={item}
-              pricetype={pricetype}
-              addToCart={addToCart}
-              isInCart={cart.some(cartItem => cartItem.id === item.id)}
-              removeFromCart={removeFromCart}
-              discountPercent={discountPercent}
-              isMobile={isMobile}
-              cart={cart} // Pass cart state
-              updateCartItemQuantity={updateCartItemQuantity} // Pass update function
-              setshowconfirmorder={setshowconfirmorder}
-            />
-          ))}
+            {filteredItems.map(item => (
+              <MobileDishCard 
+                section={section}
+                tableNo={tableNo}
+                restaurant={restaurant}
+                key={item.id}
+                item={item}
+                pricetype={pricetype}
+                addToCart={addToCart}
+                isInCart={cart.some(cartItem => cartItem.id === item.id)}
+                removeFromCart={removeFromCart}
+                discountPercent={discountPercent}
+                isMobile={isMobile}
+                cart={cart} // Pass cart state
+                updateCartItemQuantity={updateCartItemQuantity} // Pass update function
+                setshowconfirmorder={setshowconfirmorder}
+              />
+            ))}
           </Box>
         </Container>
         
